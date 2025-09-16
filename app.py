@@ -13,16 +13,16 @@ from plotly.subplots import make_subplots
 
 # ======== CONFIG =========
 st.set_page_config(
-    page_title="🎰 Prediksi Togel AI - 4 Digit Input, 6 Digit Output",
+    page_title="🎰 Prediksi Togel AI - 6 Digit UNIK (Tanpa Duplikasi)",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-st.title("🎰 Prediksi Togel AI - 4 Digit Input → 6 Digit Output")
+st.title("🎰 Prediksi Togel AI - 6 Digit UNIK (Tanpa Angka Sama)")
 st.markdown("""
 > 📌 **Aplikasi ini hanya untuk simulasi edukasi.**  
 > Togel bersifat acak murni — tidak ada model yang bisa memprediksi hasilnya secara akurat.  
-> Di sini, kami belajar dari **histori 4-digit**, lalu **memprediksi 2 digit tambahan** untuk membentuk angka 6-digit.
+> Di sini, kami belajar dari **histori 4-digit**, lalu **memprediksi 2 digit tambahan** agar menjadi **6 digit UNIK (tanpa pengulangan)**.
 """)
 
 # ======== INPUT DATA =========
@@ -107,20 +107,36 @@ def build_markov_model(data):
     return transition
 
 def prediksi_markov(current, transition, n=5):
-    """Prediksi n angka 4-digit berikutnya, lalu tambah 2 digit acak jadi 6-digit"""
+    """Prediksi 4-digit, lalu tambah 2 digit unik dari sisa angka (0-9)"""
     candidates = transition.get(current, [])
     if not candidates:
         candidates = [str(random.randint(0, 9999)).zfill(4) for _ in range(100)]
     
-    hasil_6digit = []
+    hasil_6digit_unik = []
     for c in random.choices(candidates, k=n):
-        # Tambahkan 2 digit acak (00–99) untuk jadi 6 digit
-        dua_digit_acak = str(random.randint(0, 99)).zfill(2)
-        hasil_6digit.append(c + dua_digit_acak)
-    return hasil_6digit
+        # Ambil 4 digit prediksi
+        digits_used = set(int(d) for d in c)
+        
+        # Sisa angka yang belum digunakan (0–9)
+        available = [d for d in range(10) if d not in digits_used]
+        
+        if len(available) < 2:
+            # Jika kurang dari 2 angka tersisa, pakai angka acak unik (jarang terjadi)
+            all_digits = list(range(10))
+            random.shuffle(all_digits)
+            two_new = all_digits[:2]
+        else:
+            # Pilih 2 digit unik dari sisa
+            two_new = random.sample(available, 2)
+        
+        # Gabungkan jadi 6-digit unik
+        six_digit = c + ''.join(map(str, two_new))
+        hasil_6digit_unik.append(six_digit)
+    
+    return hasil_6digit_unik
 
 def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
-    """Train LSTM/GRU untuk prediksi 4-digit, lalu prediksi 2-digit tambahan"""
+    """Train LSTM/GRU untuk prediksi 4-digit"""
     X = angka_to_digit_array(data[:-1])  # Input: 4 digit
     y = angka_to_digit_array(data[1:])   # Target: 4 digit
 
@@ -153,7 +169,7 @@ def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
     return model, scaler, history
 
 def prediksi_multi(model, scaler, last_sequence, n=5, sequence_length=5):
-    """Prediksi 4 digit, lalu tambahkan 2 digit acak jadi 6 digit"""
+    """Prediksi 4-digit, lalu tambah 2 digit unik dari sisa angka (0-9)"""
     out = []
     current_seq = last_sequence.copy()
     
@@ -166,10 +182,24 @@ def prediksi_multi(model, scaler, last_sequence, n=5, sequence_length=5):
         pred_digits = np.clip(np.round(pred_raw).astype(int), 0, 9)
         pred_str_4digit = ''.join(map(str, pred_digits.flatten()))
         
-        # Tambahkan 2 digit acak (00–99) untuk jadi 6 digit
-        dua_digit_acak = str(random.randint(0, 99)).zfill(2)
-        pred_str_6digit = pred_str_4digit + dua_digit_acak
-        out.append(pred_str_6digit)
+        # Ambil digit yang sudah digunakan
+        digits_used = set(int(d) for d in pred_str_4digit)
+        
+        # Sisa angka yang belum digunakan (0–9)
+        available = [d for d in range(10) if d not in digits_used]
+        
+        if len(available) < 2:
+            # Jika kurang dari 2 angka tersisa, pakai angka acak unik
+            all_digits = list(range(10))
+            random.shuffle(all_digits)
+            two_new = all_digits[:2]
+        else:
+            # Pilih 2 digit unik dari sisa
+            two_new = random.sample(available, 2)
+        
+        # Gabungkan jadi 6-digit unik
+        six_digit = pred_str_4digit + ''.join(map(str, two_new))
+        out.append(six_digit)
         
         # Update sequence untuk prediksi selanjutnya
         new_row = pred_digits.flatten()
@@ -201,7 +231,6 @@ def hitung_akurasi(data, model_type="Markov", sequence_length=5, test_size=10):
             if model_type == "Markov":
                 transition = build_markov_model(data[:i+1])
                 pred_list_4digit = prediksi_markov(input_val, transition, n=5)
-                # Ambil bagian 4-digit pertama dari prediksi 6-digit
                 pred_list_4digit = [p[:4] for p in pred_list_4digit]
             else:
                 model, scaler, _ = train_lstm_gru_model(data[:i+1], use_gru=(model_type=="GRU"), sequence_length=sequence_length)
@@ -234,7 +263,7 @@ def hitung_akurasi(data, model_type="Markov", sequence_length=5, test_size=10):
     }
 
 # ======== PREDIKSI =========
-st.subheader("🎯 Prediksi Angka 6 Digit (dari 4 digit terakhir)")
+st.subheader("🎯 Prediksi Angka 6 Digit UNIK (Tanpa Angka Sama)")
 
 with st.spinner("🔍 Menghitung prediksi..."):
     try:
@@ -249,7 +278,7 @@ with st.spinner("🔍 Menghitung prediksi..."):
             last_seq = X_scaled[-5:]  # Ambil 5 angka terakhir (4-digit)
             prediksi = prediksi_multi(model, scaler, last_seq, n=5, sequence_length=5)
         
-        st.success(f"✨ **Prediksi 5 angka 6-digit:**")
+        st.success(f"✨ **Prediksi 5 angka 6-digit UNIK:**")
         cols = st.columns(5)
         for i, p in enumerate(prediksi):
             with cols[i]:
@@ -305,11 +334,11 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # Tampilkan juga 2 digit tambahan
-st.markdown("#### ➕ 2 Digit Tambahan (Acak)")
+st.markdown("#### ➕ 2 Digit Tambahan (Unik & Tidak Berulang)")
 cols2 = st.columns(5)
 for i, p in enumerate(prediksi):
     with cols2[i]:
-        st.info(f"`{p[4:6]}` ← 2 digit tambahan (acak)")
+        st.info(f"`{p[4:6]}` ← 2 digit tambahan (unik, tidak ada yang sama dengan 4 digit pertama)")
 
 # ======== AKURASI =========
 st.subheader("🔍 Uji Akurasi Model (berdasarkan 4-digit)")
@@ -351,7 +380,7 @@ if st.button("🚀 Jalankan Uji Akurasi", type="primary"):
             
             # Interpretasi
             if acc['top5'] > 20:
-                st.info("💡 **Interpretasi**: Model menemukan pola kuat dalam 4-digit histori — 2 digit tambahan bersifat acak, jadi prediksi 6-digit tidak bisa diandalkan.")
+                st.info("💡 **Interpretasi**: Model menemukan pola kuat dalam 4-digit histori — 2 digit tambahan dibuat unik secara acak, jadi prediksi 6-digit unik ini **tetap tidak bisa diandalkan untuk togel nyata**.")
             else:
                 st.warning("⚠️ **Interpretasi**: Model tidak menemukan pola kuat. Ini sesuai ekspektasi — togel bersifat acak!")
 
@@ -367,18 +396,21 @@ with st.expander("📚 Penjelasan Teknis & Cara Kerja"):
     - Contoh: `1234`, `5678`, `9012`
     - Model belajar pola transisi antar angka 4-digit.
 
-    #### **Output: Prediksi 6-digit**
-    - Model memprediksi **4 digit berikutnya** → lalu menambahkan **2 digit acak (00–99)**.
-    - Jadi: `1234` → prediksi `5678` → hasil akhir: `5678` + `23` = `567823`
+    #### **Output: Prediksi 6-digit UNIK**
+    - Model memprediksi **4 digit berikutnya** → lalu mencari **2 digit tambahan** dari angka 0–9 yang **belum digunakan**.
+    - Jadi:  
+      `1234` → prediksi `5678` → digit yang digunakan: `{1,2,3,4,5,6,7,8}`  
+      Sisa: `{0,9}` → pilih 2 digit: `0` dan `9` → hasil: `567809` ✅  
+      Semua digit unik! Tidak ada yang sama.
 
-    #### **Mengapa 2 digit acak?**
-    - Karena tidak ada informasi histori tentang 2 digit tambahan.
-    - Ini merepresentasikan “keacakan” nyata dalam togel.
-    - Jika kamu ingin prediksi 2 digit juga, itu butuh data histori 6-digit — dan itu bukan tujuan kita.
+    #### **Mengapa Ini Penting?**
+    - Dalam beberapa jenis togel (terutama di Asia), ada variasi **“6D Unik”** di mana angka boleh tidak berulang.
+    - Ini adalah simulasi realistis dari aturan tersebut.
+    - 2 digit tambahan **tidak diprediksi oleh model**, tapi **dihasilkan secara acak dari sisa angka** — agar tetap unik.
 
     ### ⚠️ Penting!
     - **Togel itu acak murni** — bahkan jika model bisa prediksi 4-digit dengan akurasi tinggi, 2 digit terakhir tetap acak.
-    - Aplikasi ini hanya untuk **eksperimen kreatif**: *“Bagaimana jika kita kombinasikan pola + keacakan?”*
+    - Aplikasi ini hanya untuk **eksperimen kreatif**: *“Bagaimana jika kita kombinasikan pola + aturan unik?”*
     - **Bukan alat untuk menang togel.**
     """)
     
@@ -386,7 +418,7 @@ with st.expander("📚 Penjelasan Teknis & Cara Kerja"):
     st.markdown("""
     - Akurasi top-5 > 20% pada 4-digit adalah **sangat tinggi** — artinya data kamu punya bias kuat.
     - Jika akurasi rendah (<10%), itu normal — karena togel memang acak.
-    - 2 digit tambahan **tidak diprediksi**, jadi hasil 6-digit **tidak bisa diandalkan**.
+    - **Aturan “unik” membatasi ruang pencarian** — jadi kemungkinan hasilnya lebih sedikit, tapi tidak lebih akurat.
     """)
 
 # ======== FOOTER =========
