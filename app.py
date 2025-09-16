@@ -13,65 +13,72 @@ from plotly.subplots import make_subplots
 
 # ======== CONFIG =========
 st.set_page_config(
-    page_title="🎰 Prediksi Togel AI - 6 Digit (Markov/LSTM/GRU)",
+    page_title="🎰 Prediksi Togel AI - Markov / LSTM / GRU",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-st.title("🎰 Prediksi Togel AI - Angka 6 Digit")
+st.title("🎰 Prediksi Togel AI - Markov Chain & Deep Learning")
 st.markdown("""
 > 📌 **Aplikasi ini hanya untuk simulasi edukasi.**  
-> Togel 6 digit (SGP/HK) bersifat acak murni — tidak ada model yang bisa memprediksi hasilnya secara akurat.  
+> Togel adalah permainan acak murni — tidak ada model yang bisa memprediksi hasilnya secara akurat.  
 > Gunakan aplikasi ini untuk belajar tentang *Markov Chain*, *LSTM*, dan *GRU* dalam konteks deret waktu.
 """)
 
 # ======== INPUT DATA =========
-st.subheader("📥 Masukkan Histori Angka 6 Digit")
-st.caption("Masukkan satu angka 6 digit per baris (contoh: 123456, 789012, dst). Minimal 15 angka.")
+st.subheader("📥 Masukkan Histori Angka 4 Digit")
+st.caption("Masukkan satu angka 4 digit per baris (contoh: 7123, 4012, dst). Minimal 15 angka.")
 
 teks_angka = st.text_area(
     "Histori angka (satu per baris):",
     height=250,
-    value="""123456
-789012
-345678
-901234
-567890
-234567
-890123
-456789
-012345
-678901
-112233
-445566
-778899
-135790
-246801
-987654
-321098
-654321
-111222
-333444
-555666
-777888
-999000
-121212
-343434""",
-    help="Pastikan semua angka 6 digit, tanpa spasi atau karakter lain."
+    value="""7123
+4012
+6321
+1980
+3124
+8945
+1098
+7632
+5412
+1093
+8842
+3381
+2764
+0012
+5678
+4839
+7021
+1593
+2493
+3192
+9911
+8822
+1763
+4091
+2631
+7028
+1832
+3840
+1193
+8092
+1930
+3984""",
+    help="Pastikan semua angka 4 digit, tanpa spasi atau karakter lain."
 )
 
 # Parsing data
 angka_list = [
-    x.strip().zfill(6)
+    x.strip().zfill(4)
     for x in teks_angka.splitlines()
-    if x.strip().isdigit() and len(x.strip()) == 6
+    if x.strip().isdigit() and len(x.strip()) == 4
 ]
 
 if len(angka_list) < 15:
     st.warning(f"⚠️ Masukkan minimal **15 angka** histori agar model bisa belajar.")
     st.stop()
 
-st.success(f"✅ Data berhasil dimuat: {len(angka_list)} angka 6-digit.")
+st.success(f"✅ Data berhasil dimuat: {len(angka_list)} angka 4-digit.")
 
 # ======== MODEL CHOICE =========
 st.subheader("🧠 Pilih Model Prediksi")
@@ -84,19 +91,19 @@ model_choice = st.selectbox(
 # Input angka terakhir
 input_angka = st.text_input(
     "Angka terakhir (untuk prediksi):",
-    value=angka_list[-1] if angka_list else "123456",
-    max_chars=6,
-    help="Masukkan angka terakhir dari histori Anda. Harus 6 digit."
+    value=angka_list[-1],
+    max_chars=4,
+    help="Masukkan angka terakhir dari histori Anda. Harus 4 digit."
 )
 
-if len(input_angka) != 6 or not input_angka.isdigit():
-    st.error("❌ Angka terakhir harus 6 digit numerik!")
+if len(input_angka) != 4 or not input_angka.isdigit():
+    st.error("❌ Angka terakhir harus 4 digit numerik!")
     st.stop()
 
 # ======== HELPER FUNCTIONS =========
 
 def angka_to_digit_array(data):
-    """Konversi list string angka ke array numpy 2D (n, 6)"""
+    """Konversi list string angka ke array numpy 2D (n, 4)"""
     return np.array([[int(d) for d in list(a)] for a in data], dtype=np.float32)
 
 def build_markov_model(data):
@@ -111,11 +118,11 @@ def prediksi_markov(current, transition, n=5):
     candidates = transition.get(current, [])
     if not candidates:
         # Jika tidak ada transisi, generate acak
-        candidates = [str(random.randint(0, 999999)).zfill(6) for _ in range(100)]
+        candidates = [str(random.randint(0, 9999)).zfill(4) for _ in range(100)]
     return random.choices(candidates, k=n)
 
 def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
-    """Train LSTM atau GRU model untuk prediksi digit (6 digit)"""
+    """Train LSTM atau GRU model untuk prediksi digit"""
     X = angka_to_digit_array(data[:-1])
     y = angka_to_digit_array(data[1:])
     
@@ -130,10 +137,10 @@ def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
         raise ValueError(f"Tidak cukup data untuk membuat sequence dengan panjang {sequence_length}. Masukkan lebih banyak data.")
     
     model = Sequential([
-        (GRU if use_gru else LSTM)(64, activation='relu', input_shape=(sequence_length, 6)),
+        (GRU if use_gru else LSTM)(64, activation='relu', input_shape=(sequence_length, 4)),
         Dropout(0.2),
         Dense(32, activation='relu'),
-        Dense(6)  # Output: 6 digit
+        Dense(4)  # Output: 4 digit
     ])
     
     model.compile(
@@ -143,7 +150,7 @@ def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
     )
     
     # Latih model
-    with st.spinner("⏳ Melatih model... (ini bisa memakan waktu 10-40 detik)"):
+    with st.spinner("⏳ Melatih model... (ini bisa memakan waktu 10-30 detik)"):
         history = model.fit(gen, epochs=20, verbose=0)
     
     return model, scaler, history
@@ -167,9 +174,9 @@ def prediksi_multi(model, scaler, last_sequence, n=5, sequence_length=5):
         new_row = pred_digits.flatten()
         current_seq = np.vstack([current_seq[1:], new_row]) if len(current_seq) > 1 else np.array([new_row])
         
-        # Pastikan shape tetap (sequence_length, 6)
+        # Pastikan shape tetap (sequence_length, 4)
         if len(current_seq) < sequence_length:
-            pad = np.zeros((sequence_length - len(current_seq), 6))
+            pad = np.zeros((sequence_length - len(current_seq), 4))
             current_seq = np.vstack([pad, current_seq])
     
     return out
@@ -258,7 +265,7 @@ fig = make_subplots(rows=1, cols=1, subplot_titles=["Prediksi vs Histori (Contoh
 # Plot histori 5 angka terakhir
 hist_data = angka_list[-5:]
 hist_digits = [[int(d) for d in a] for a in hist_data]
-for digit_pos in range(6):
+for digit_pos in range(4):
     fig.add_trace(
         go.Scatter(
             x=[f"Hist-{i}" for i in range(1,6)],
@@ -273,7 +280,7 @@ for digit_pos in range(6):
 
 # Plot prediksi
 pred_digits = [[int(d) for d in p] for p in prediksi]
-for digit_pos in range(6):
+for digit_pos in range(4):
     fig.add_trace(
         go.Scatter(
             x=[f"Pred-{i}" for i in range(1,6)],
@@ -287,7 +294,7 @@ for digit_pos in range(6):
     )
 
 fig.update_layout(
-    title="Perbandingan Digit Histori vs Prediksi (6 Digit)",
+    title="Perbandingan Digit Histori vs Prediksi",
     xaxis_title="Langkah",
     yaxis_title="Nilai Digit (0-9)",
     height=400,
@@ -348,8 +355,8 @@ with st.expander("📚 Penjelasan Teknis & Cara Kerja"):
     ### 🔍 Bagaimana Model Ini Bekerja?
 
     #### **1. Markov Chain**
-    - Membangun daftar “transisi” antar angka 6-digit.
-    - Jika `123456` sering diikuti oleh `789012`, maka saat masuk `123456`, probabilitas `789012` naik.
+    - Membangun daftar “transisi” antar angka.
+    - Jika `7123` sering diikuti oleh `4012`, maka saat masuk `7123`, probabilitas `4012` naik.
     - **Kelebihan**: Cepat, sederhana, tidak butuh banyak data.
     - **Kekurangan**: Hanya lihat satu langkah sebelumnya — tidak paham pola panjang.
 
@@ -360,16 +367,16 @@ with st.expander("📚 Penjelasan Teknis & Cara Kerja"):
     - **Kekurangan**: Butuh banyak data, mudah overfit, sangat lambat.
 
     ### ⚠️ Penting!
-    - **Togel 6 digit itu acak murni** — setiap angka punya peluang 1/1.000.000.
+    - **Togel itu acak murni** — setiap angka punya peluang 1/10000.
     - Model ini hanya meniru pola statistik dalam data yang kamu berikan — bukan memprediksi angka berikutnya yang "benar".
     - Aplikasi ini **hanya untuk pembelajaran** konsep AI dan deret waktu.
     """)
     
     st.markdown("#### 📈 Catatan Performa")
     st.markdown("""
-    - Dalam data acak, akurasi top-5 biasanya **< 5%**.
-    - Jika akurasi > 10%, itu karena data kamu **tidak acak** (misal: pola manusia, tanggal lahir, nomor HP).
-    - Jika akurasi > 20%, kemungkinan besar data kamu **dibuat-buat** atau memiliki **bias kuat**.
+    - Dalam data acak, akurasi top-5 biasanya **< 10%**.
+    - Jika akurasi > 20%, itu karena data kamu **tidak acak** (misal: pola manusia, tanggal lahir, dll).
+    - Jika akurasi > 30%, kemungkinan besar data kamu **dibuat-buat** atau memiliki **bias kuat**.
     """)
 
 # ======== FOOTER =========
