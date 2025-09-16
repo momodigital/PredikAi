@@ -13,57 +13,50 @@ from plotly.subplots import make_subplots
 
 # ======== CONFIG =========
 st.set_page_config(
-    page_title="🎰 Prediksi Togel AI - Markov / LSTM / GRU",
+    page_title="🎰 Prediksi Togel AI - 4 Digit Input, 6 Digit Output",
     layout="centered",
     initial_sidebar_state="expanded"
 )
 
-st.title("🎰 Prediksi Togel AI - Markov Chain & Deep Learning")
+st.title("🎰 Prediksi Togel AI - 4 Digit Input → 6 Digit Output")
 st.markdown("""
 > 📌 **Aplikasi ini hanya untuk simulasi edukasi.**  
-> Togel adalah permainan acak murni — tidak ada model yang bisa memprediksi hasilnya secara akurat.  
-> Gunakan aplikasi ini untuk belajar tentang *Markov Chain*, *LSTM*, dan *GRU* dalam konteks deret waktu.
+> Togel bersifat acak murni — tidak ada model yang bisa memprediksi hasilnya secara akurat.  
+> Di sini, kami belajar dari **histori 4-digit**, lalu **memprediksi 2 digit tambahan** untuk membentuk angka 6-digit.
 """)
 
 # ======== INPUT DATA =========
 st.subheader("📥 Masukkan Histori Angka 4 Digit")
-st.caption("Masukkan satu angka 4 digit per baris (contoh: 7123, 4012, dst). Minimal 15 angka.")
+st.caption("Masukkan satu angka 4 digit per baris (contoh: 1234, 5678, dst). Minimal 15 angka.")
 
 teks_angka = st.text_area(
     "Histori angka (satu per baris):",
     height=250,
-    value="""7123
-4012
-6321
-1980
-3124
-8945
-1098
-7632
-5412
-1093
-8842
-3381
-2764
-0012
+    value="""1234
 5678
-4839
-7021
-1593
-2493
-3192
-9911
-8822
-1763
-4091
-2631
-7028
-1832
-3840
-1193
-8092
-1930
-3984""",
+9012
+3456
+7890
+1230
+4567
+8901
+2345
+6789
+0123
+4560
+7894
+1205
+3459
+6781
+9016
+2340
+5672
+8903
+1238
+4564
+7897
+0129
+3451""",
     help="Pastikan semua angka 4 digit, tanpa spasi atau karakter lain."
 )
 
@@ -85,13 +78,13 @@ st.subheader("🧠 Pilih Model Prediksi")
 model_choice = st.selectbox(
     "Pilih algoritma prediksi:",
     ["Markov Chain", "LSTM Digit", "GRU Digit"],
-    help="Markov Chain: berdasarkan pola transisi. LSTM/GRU: berdasarkan pola panjang deret waktu."
+    help="Markov Chain: berdasarkan transisi angka 4-digit. LSTM/GRU: berdasarkan pola deret waktu."
 )
 
-# Input angka terakhir
+# Input angka terakhir (4 digit)
 input_angka = st.text_input(
-    "Angka terakhir (untuk prediksi):",
-    value=angka_list[-1],
+    "Angka terakhir (4 digit, untuk prediksi):",
+    value=angka_list[-1] if angka_list else "1234",
     max_chars=4,
     help="Masukkan angka terakhir dari histori Anda. Harus 4 digit."
 )
@@ -107,29 +100,34 @@ def angka_to_digit_array(data):
     return np.array([[int(d) for d in list(a)] for a in data], dtype=np.float32)
 
 def build_markov_model(data):
-    """Bangun transition matrix Markov Chain"""
+    """Bangun transition matrix Markov Chain (4-digit)"""
     transition = defaultdict(list)
     for i in range(len(data) - 1):
         transition[data[i]].append(data[i + 1])
     return transition
 
 def prediksi_markov(current, transition, n=5):
-    """Prediksi n angka berikutnya menggunakan Markov Chain"""
+    """Prediksi n angka 4-digit berikutnya, lalu tambah 2 digit acak jadi 6-digit"""
     candidates = transition.get(current, [])
     if not candidates:
-        # Jika tidak ada transisi, generate acak
         candidates = [str(random.randint(0, 9999)).zfill(4) for _ in range(100)]
-    return random.choices(candidates, k=n)
+    
+    hasil_6digit = []
+    for c in random.choices(candidates, k=n):
+        # Tambahkan 2 digit acak (00–99) untuk jadi 6 digit
+        dua_digit_acak = str(random.randint(0, 99)).zfill(2)
+        hasil_6digit.append(c + dua_digit_acak)
+    return hasil_6digit
 
 def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
-    """Train LSTM atau GRU model untuk prediksi digit"""
-    X = angka_to_digit_array(data[:-1])
-    y = angka_to_digit_array(data[1:])
-    
+    """Train LSTM/GRU untuk prediksi 4-digit, lalu prediksi 2-digit tambahan"""
+    X = angka_to_digit_array(data[:-1])  # Input: 4 digit
+    y = angka_to_digit_array(data[1:])   # Target: 4 digit
+
     scaler = MinMaxScaler()
     X_scaled = scaler.fit_transform(X)
     y_scaled = scaler.transform(y)
-    
+
     # Buat timeseries generator
     gen = TimeseriesGenerator(X_scaled, y_scaled, length=sequence_length, batch_size=1)
     
@@ -149,26 +147,29 @@ def train_lstm_gru_model(data, use_gru=False, sequence_length=5):
         metrics=['mae']
     )
     
-    # Latih model
-    with st.spinner("⏳ Melatih model... (ini bisa memakan waktu 10-30 detik)"):
+    with st.spinner("⏳ Melatih model... (ini bisa memakan waktu 10-40 detik)"):
         history = model.fit(gen, epochs=20, verbose=0)
     
     return model, scaler, history
 
 def prediksi_multi(model, scaler, last_sequence, n=5, sequence_length=5):
-    """Prediksi n angka berikutnya menggunakan model LSTM/GRU"""
+    """Prediksi 4 digit, lalu tambahkan 2 digit acak jadi 6 digit"""
     out = []
     current_seq = last_sequence.copy()
     
     for _ in range(n):
-        # Prediksi 1 langkah
+        # Prediksi 4 digit berikutnya
         pred_scaled = model.predict(np.expand_dims(current_seq, axis=0), verbose=0)
         pred_raw = scaler.inverse_transform(pred_scaled)
         
         # Konversi ke angka 0-9
         pred_digits = np.clip(np.round(pred_raw).astype(int), 0, 9)
-        pred_str = ''.join(map(str, pred_digits.flatten()))
-        out.append(pred_str)
+        pred_str_4digit = ''.join(map(str, pred_digits.flatten()))
+        
+        # Tambahkan 2 digit acak (00–99) untuk jadi 6 digit
+        dua_digit_acak = str(random.randint(0, 99)).zfill(2)
+        pred_str_6digit = pred_str_4digit + dua_digit_acak
+        out.append(pred_str_6digit)
         
         # Update sequence untuk prediksi selanjutnya
         new_row = pred_digits.flatten()
@@ -182,39 +183,40 @@ def prediksi_multi(model, scaler, last_sequence, n=5, sequence_length=5):
     return out
 
 def hitung_akurasi(data, model_type="Markov", sequence_length=5, test_size=10):
-    """Hitung akurasi top-1, top-3, top-5 pada subset data uji"""
+    """Hitung akurasi top-1, top-3, top-5 pada 4-digit, bukan 6-digit"""
     if len(data) < test_size + sequence_length + 1:
         raise ValueError(f"Data tidak cukup. Butuh minimal {test_size + sequence_length + 1} angka.")
     
     benar = {'top1': 0, 'top3': 0, 'top5': 0}
     total = 0
     
-    # Uji dari index test_size sampai akhir
     start_idx = len(data) - test_size - 1
     end_idx = len(data) - 1
     
     for i in range(start_idx, end_idx):
         try:
             input_val = data[i]
-            target = data[i + 1]
+            target_4digit = data[i + 1]
             
             if model_type == "Markov":
                 transition = build_markov_model(data[:i+1])
-                pred_list = prediksi_markov(input_val, transition, n=5)
+                pred_list_4digit = prediksi_markov(input_val, transition, n=5)
+                # Ambil bagian 4-digit pertama dari prediksi 6-digit
+                pred_list_4digit = [p[:4] for p in pred_list_4digit]
             else:
-                # LSTM/GRU
                 model, scaler, _ = train_lstm_gru_model(data[:i+1], use_gru=(model_type=="GRU"), sequence_length=sequence_length)
                 X = angka_to_digit_array(data[:i+1])
                 scaler.fit(X)
                 X_scaled = scaler.transform(X)
                 last_seq = X_scaled[-sequence_length:]
-                pred_list = prediksi_multi(model, scaler, last_seq, n=5, sequence_length=sequence_length)
+                pred_list_6digit = prediksi_multi(model, scaler, last_seq, n=5, sequence_length=sequence_length)
+                pred_list_4digit = [p[:4] for p in pred_list_6digit]
             
-            if target == pred_list[0]:
+            if target_4digit == pred_list_4digit[0]:
                 benar['top1'] += 1
-            if target in pred_list[:3]:
+            if target_4digit in pred_list_4digit[:3]:
                 benar['top3'] += 1
-            if target in pred_list:
+            if target_4digit in pred_list_4digit:
                 benar['top5'] += 1
             total += 1
             
@@ -232,7 +234,7 @@ def hitung_akurasi(data, model_type="Markov", sequence_length=5, test_size=10):
     }
 
 # ======== PREDIKSI =========
-st.subheader("🎯 Prediksi Angka Berikutnya")
+st.subheader("🎯 Prediksi Angka 6 Digit (dari 4 digit terakhir)")
 
 with st.spinner("🔍 Menghitung prediksi..."):
     try:
@@ -244,10 +246,10 @@ with st.spinner("🔍 Menghitung prediksi..."):
             model, scaler, history = train_lstm_gru_model(angka_list, use_gru=use_gru, sequence_length=5)
             X = angka_to_digit_array(angka_list)
             X_scaled = scaler.transform(X)
-            last_seq = X_scaled[-5:]  # Ambil 5 angka terakhir
+            last_seq = X_scaled[-5:]  # Ambil 5 angka terakhir (4-digit)
             prediksi = prediksi_multi(model, scaler, last_seq, n=5, sequence_length=5)
         
-        st.success(f"✨ **Prediksi 5 angka berikutnya:**")
+        st.success(f"✨ **Prediksi 5 angka 6-digit:**")
         cols = st.columns(5)
         for i, p in enumerate(prediksi):
             with cols[i]:
@@ -262,7 +264,7 @@ st.subheader("📊 Visualisasi Pola Prediksi")
 
 fig = make_subplots(rows=1, cols=1, subplot_titles=["Prediksi vs Histori (Contoh 5 Angka Terakhir)"])
 
-# Plot histori 5 angka terakhir
+# Plot histori 5 angka terakhir (4-digit)
 hist_data = angka_list[-5:]
 hist_digits = [[int(d) for d in a] for a in hist_data]
 for digit_pos in range(4):
@@ -278,15 +280,15 @@ for digit_pos in range(4):
         row=1, col=1
     )
 
-# Plot prediksi
-pred_digits = [[int(d) for d in p] for p in prediksi]
+# Plot prediksi (ambil 4 digit pertama dari 6-digit)
+pred_digits = [[int(d) for d in p[:4]] for p in prediksi]
 for digit_pos in range(4):
     fig.add_trace(
         go.Scatter(
             x=[f"Pred-{i}" for i in range(1,6)],
             y=[p[digit_pos] for p in pred_digits],
             mode='lines+markers',
-            name=f'Posisi {digit_pos+1} (Prediksi)',
+            name=f'Posisi {digit_pos+1} (Prediksi 4-digit)',
             line=dict(color=f'rgba(231, 76, 60, 0.7)', dash='dash'),
             showlegend=True
         ),
@@ -294,7 +296,7 @@ for digit_pos in range(4):
     )
 
 fig.update_layout(
-    title="Perbandingan Digit Histori vs Prediksi",
+    title="Perbandingan Digit Histori vs Prediksi (4-digit bagian depan)",
     xaxis_title="Langkah",
     yaxis_title="Nilai Digit (0-9)",
     height=400,
@@ -302,8 +304,15 @@ fig.update_layout(
 )
 st.plotly_chart(fig, use_container_width=True)
 
+# Tampilkan juga 2 digit tambahan
+st.markdown("#### ➕ 2 Digit Tambahan (Acak)")
+cols2 = st.columns(5)
+for i, p in enumerate(prediksi):
+    with cols2[i]:
+        st.info(f"`{p[4:6]}` ← 2 digit tambahan (acak)")
+
 # ======== AKURASI =========
-st.subheader("🔍 Uji Akurasi Model")
+st.subheader("🔍 Uji Akurasi Model (berdasarkan 4-digit)")
 
 test_size = st.slider(
     "Jumlah data uji (terakhir):",
@@ -319,7 +328,7 @@ if st.button("🚀 Jalankan Uji Akurasi", type="primary"):
             mode = "Markov" if model_choice == "Markov Chain" else ("GRU" if model_choice == "GRU Digit" else "LSTM")
             acc = hitung_akurasi(angka_list, model_type=mode, test_size=test_size, sequence_length=5)
             
-            st.markdown("### 📊 Hasil Akurasi:")
+            st.markdown("### 📊 Hasil Akurasi (4-digit bagian depan):")
             col1, col2, col3 = st.columns(3)
             col1.metric("Top-1 Accuracy", f"{acc['top1']}%", "🔎")
             col2.metric("Top-3 Accuracy", f"{acc['top3']}%", "✅")
@@ -332,7 +341,7 @@ if st.button("🚀 Jalankan Uji Akurasi", type="primary"):
                 go.Bar(name='Top-5', x=['Akurasi'], y=[acc['top5']], marker_color='gold')
             ])
             fig_acc.update_layout(
-                title="Akurasi Prediksi (Top-1, Top-3, Top-5)",
+                title="Akurasi Prediksi (Top-1, Top-3, Top-5) — Berdasarkan 4-digit",
                 yaxis_title="Persentase (%)",
                 yaxis_range=[0, 100],
                 height=300,
@@ -342,10 +351,10 @@ if st.button("🚀 Jalankan Uji Akurasi", type="primary"):
             
             # Interpretasi
             if acc['top5'] > 20:
-                st.info("💡 **Interpretasi**: Model menunjukkan pola tertentu dalam data — mungkin ada bias atau tren kecil. Tapi tetap tidak bisa dipercaya untuk prediksi nyata.")
+                st.info("💡 **Interpretasi**: Model menemukan pola kuat dalam 4-digit histori — 2 digit tambahan bersifat acak, jadi prediksi 6-digit tidak bisa diandalkan.")
             else:
                 st.warning("⚠️ **Interpretasi**: Model tidak menemukan pola kuat. Ini sesuai ekspektasi — togel bersifat acak!")
-                
+
         except Exception as e:
             st.error(f"❌ Gagal menghitung akurasi: {str(e)}")
 
@@ -354,29 +363,30 @@ with st.expander("📚 Penjelasan Teknis & Cara Kerja"):
     st.markdown("""
     ### 🔍 Bagaimana Model Ini Bekerja?
 
-    #### **1. Markov Chain**
-    - Membangun daftar “transisi” antar angka.
-    - Jika `7123` sering diikuti oleh `4012`, maka saat masuk `7123`, probabilitas `4012` naik.
-    - **Kelebihan**: Cepat, sederhana, tidak butuh banyak data.
-    - **Kekurangan**: Hanya lihat satu langkah sebelumnya — tidak paham pola panjang.
+    #### **Input: Histori 4-digit**
+    - Contoh: `1234`, `5678`, `9012`
+    - Model belajar pola transisi antar angka 4-digit.
 
-    #### **2. LSTM / GRU**
-    - Menggunakan jaringan saraf rekursif untuk melihat **5 angka terakhir sebagai urutan waktu**.
-    - Belajar pola kompleks: misalnya, jika digit pertama cenderung naik setiap 3 langkah.
-    - **Kelebihan**: Bisa tangkap pola jangka panjang.
-    - **Kekurangan**: Butuh banyak data, mudah overfit, sangat lambat.
+    #### **Output: Prediksi 6-digit**
+    - Model memprediksi **4 digit berikutnya** → lalu menambahkan **2 digit acak (00–99)**.
+    - Jadi: `1234` → prediksi `5678` → hasil akhir: `5678` + `23` = `567823`
+
+    #### **Mengapa 2 digit acak?**
+    - Karena tidak ada informasi histori tentang 2 digit tambahan.
+    - Ini merepresentasikan “keacakan” nyata dalam togel.
+    - Jika kamu ingin prediksi 2 digit juga, itu butuh data histori 6-digit — dan itu bukan tujuan kita.
 
     ### ⚠️ Penting!
-    - **Togel itu acak murni** — setiap angka punya peluang 1/10000.
-    - Model ini hanya meniru pola statistik dalam data yang kamu berikan — bukan memprediksi angka berikutnya yang "benar".
-    - Aplikasi ini **hanya untuk pembelajaran** konsep AI dan deret waktu.
+    - **Togel itu acak murni** — bahkan jika model bisa prediksi 4-digit dengan akurasi tinggi, 2 digit terakhir tetap acak.
+    - Aplikasi ini hanya untuk **eksperimen kreatif**: *“Bagaimana jika kita kombinasikan pola + keacakan?”*
+    - **Bukan alat untuk menang togel.**
     """)
     
     st.markdown("#### 📈 Catatan Performa")
     st.markdown("""
-    - Dalam data acak, akurasi top-5 biasanya **< 10%**.
-    - Jika akurasi > 20%, itu karena data kamu **tidak acak** (misal: pola manusia, tanggal lahir, dll).
-    - Jika akurasi > 30%, kemungkinan besar data kamu **dibuat-buat** atau memiliki **bias kuat**.
+    - Akurasi top-5 > 20% pada 4-digit adalah **sangat tinggi** — artinya data kamu punya bias kuat.
+    - Jika akurasi rendah (<10%), itu normal — karena togel memang acak.
+    - 2 digit tambahan **tidak diprediksi**, jadi hasil 6-digit **tidak bisa diandalkan**.
     """)
 
 # ======== FOOTER =========
