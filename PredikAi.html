@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Predictor 6 Angka & 3D - Enhanced</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --primary: #4f46e5;
+            --accent: #06b6d4;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #a855f7;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: 
+                radial-gradient(ellipse at top, #1e1b4b 0%, transparent 50%),
+                radial-gradient(ellipse at bottom, #0f172a 0%, transparent 50%),
+                var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 5px;            text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .card {
+            background: linear-gradient(145deg, var(--bg-card), #111827);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        h3 {
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .input-hint {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin: 5px 0 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: 2px solid var(--primary);
+            border-color: transparent;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border);            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"]:focus {
+            outline: 2px solid var(--warning);
+            border-color: transparent;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+        }
+
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #f97316);
+        }
+
+        .btn-warning:hover {
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, var(--purple), #9333ea);        }
+
+        .btn-purple:hover {
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-box {
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .box-6angka {
+            background: linear-gradient(135deg, rgba(79,70,229,0.2), var(--bg-card));
+            border-color: #818cf8;
+        }
+
+        .box-3d {
+            background: linear-gradient(135deg, rgba(6,182,212,0.2), var(--bg-card));
+            border-color: #22d3ee;
+        }
+
+        .badge-3d {
+            display: inline-block;
+            background: var(--accent);
+            color: #000;
+            font-size: 0.7em;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .result-title {
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .box-6angka .result-title { color: #818cf8; }
+        .box-3d .result-title { color: #22d3ee; }
+
+        .result-value {
+            font-size: 2.2em;
+            font-weight: 900;
+            letter-spacing: 6px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .box-6angka .result-value { color: #818cf8; }
+        .box-3d .result-value { color: #22d3ee; }
+
+        .result-desc {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* 2D Combo Box */
+        .combo-box {
+            background: linear-gradient(135deg, rgba(16,185,129,0.15), var(--bg-card));
+            border: 2px solid var(--success);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .combo-box:hover {
+            border-color: #34d399;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .combo-box::after {
+            content: '📋 Klik untuk Copy';
+            position: absolute;            top: 10px;
+            right: 15px;
+            font-size: 0.75em;
+            color: var(--success);
+            background: rgba(16,185,129,0.2);
+            padding: 3px 10px;
+            border-radius: 15px;
+        }
+
+        .combo-title {
+            color: var(--success);
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .combo-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            line-height: 1.8;
+            color: var(--text-main);
+            word-break: break-all;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--success);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .combo-info {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        /* Manual Filter Box */
+        .filter-box {
+            background: linear-gradient(135deg, rgba(245,158,11,0.15), var(--bg-card));
+            border: 2px solid var(--warning);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        .filter-title {
+            color: var(--warning);
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            border: 2px solid var(--warning);
+            display: none;
+        }
+
+        .filter-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-stat {
+            background: rgba(245,158,11,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .filter-stat .num {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--warning);
+            font-family: monospace;
+        }
+
+        .filter-stat .label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .filtered-combo {
+            font-family: 'Courier New', monospace;            font-size: 1em;
+            line-height: 1.8;
+            color: var(--text-main);
+            word-break: break-all;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--warning);
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .filtered-combo:hover {
+            border-color: #fbbf24;
+            background: rgba(245,158,11,0.1);
+        }
+
+        .filtered-combo::after {
+            content: '📋 Klik untuk Copy';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.75em;
+            color: var(--warning);
+            background: rgba(245,158,11,0.2);
+            padding: 3px 10px;
+            border-radius: 15px;
+        }
+
+        .filter-info {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(245,158,11,0.1);
+            border-radius: 6px;
+            border-left: 3px solid var(--warning);
+        }
+
+        /* 3D Combo Box (NEW) */
+        .combo-3d-box {
+            background: linear-gradient(135deg, rgba(168,85,247,0.15), var(--bg-card));
+            border: 2px solid var(--purple);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .combo-3d-box:hover {
+            border-color: #c084fc;
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .combo-3d-box::after {
+            content: '📋 Klik untuk Copy';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.75em;
+            color: var(--purple);
+            background: rgba(168,85,247,0.2);
+            padding: 3px 10px;
+            border-radius: 15px;
+        }
+
+        .combo-3d-title {
+            color: var(--purple);
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .combo-3d-value {
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.8;
+            color: var(--text-main);
+            word-break: break-all;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--purple);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .combo-3d-info {
+            font-size: 0.8em;            color: var(--text-muted);
+            margin-top: 10px;
+        }
+
+        /* Copy Notification */
+        .copy-notify {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .copy-notify.show {
+            transform: translateX(0);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-box {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: transform 0.3s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+
+        .stat-val {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 5px;            font-family: monospace;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .error-msg {
+            color: #ef4444;
+            background: rgba(239,68,68,0.15);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+            border: 1px solid #ef4444;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 15px;
+            color: var(--accent);
+            display: none;
+            font-weight: 600;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 5px; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎯 AI PREDICTOR 6 ANGKA & 3D</h1>
+        <div class="subtitle">Dual Engine • 3D Enhanced • Manual Filter • Auto 3D Combo</div>    </header>
+
+    <!-- INPUT SECTION -->
+    <div class="card">
+        <h3>📥 Input Data Histori (4 Digit)</h3>
+        <p class="input-hint">
+            Minimal 15 putaran untuk hasil akurat. Format: 4 digit per baris
+        </p>
+        <textarea id="historiInput" placeholder="Paste data di sini...&#10;Contoh:&#10;1234&#10;5678&#10;9012&#10;3456&#10;7890"></textarea>
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="loadingMsg" class="loading">⏳ Sedang menganalisis dengan AI...</div>
+        <button id="predictBtn" onclick="runPrediction()">🚀 HITUNG PREDIKSI</button>
+    </div>
+
+    <!-- RESULT SECTION -->
+    <div id="resultSection" class="card" style="display:none;">
+        
+        <!-- Dual Results -->
+        <div class="results-grid">
+            <!-- 6 Angka -->
+            <div class="result-box box-6angka">
+                <div class="result-title">🔷 6 Angka Utama</div>
+                <div class="result-value" id="result6">- - - - - -</div>
+                <div class="result-desc">Metode: 8 Algoritma Gabungan</div>
+            </div>
+
+            <!-- 3D -->
+            <div class="result-box box-3d">
+                <div class="result-title">
+                    🏆 3 Angka 3D <span class="badge-3d">ENHANCED</span>
+                </div>
+                <div class="result-value" id="result3d">- - -</div>
+                <div class="result-desc">Metode: 10 Algoritma Canggih</div>
+            </div>
+        </div>
+
+        <!-- 2D Combo Box (Auto from 6 Angka) -->
+        <div class="combo-box" onclick="copyCombo()" title="Klik untuk copy semua angka">
+            <div class="combo-title">
+                <i class="fas fa-th"></i>
+                🔢 Kombinasi 2D (00-99) - Auto Filter dari 6D
+            </div>
+            <div class="combo-value" id="combo2d">
+                Klik "HITUNG PREDIKSI" untuk generate kombinasi 2D
+            </div>
+            <div class="combo-info">
+                ⚡ Menampilkan 2D yang mengandung minimal 1 digit dari 6 angka hasil • Pemisah: * • Total: <span id="comboCount">0</span> kombinasi
+            </div>
+        </div>
+        <!-- Manual Filter Box -->
+        <div class="filter-box">
+            <div class="filter-title">
+                <i class="fas fa-filter"></i>
+                🔧 Pangkas Kombinasi dengan Angka Pilihan
+            </div>
+            <p class="filter-info">
+                💡 <strong>Cara Pakai:</strong> Masukkan digit pilihan Anda (contoh: 159). 
+                Sistem akan <strong>MENYIMPAN</strong> hanya kombinasi 2D yang mengandung digit tersebut.
+            </p>
+            <input type="text" id="manualFilterInput" placeholder="Contoh: 159  (artinya simpan 2D yang ada digit 1, 5, atau 9)">
+            <button class="btn-warning" onclick="applyManualFilter()">✂️ PANGKAS KOMBINASI</button>
+            
+            <div id="filterResult" class="filter-result">
+                <div class="filter-stats">
+                    <div class="filter-stat">
+                        <div class="num" id="beforeFilter">0</div>
+                        <div class="label">Dari 6D</div>
+                    </div>
+                    <div class="filter-stat">
+                        <div class="num" id="filteredOut" style="color:var(--danger)">0</div>
+                        <div class="label">Dibuang</div>
+                    </div>
+                    <div class="filter-stat">
+                        <div class="num" id="afterFilter" style="color:var(--success)">0</div>
+                        <div class="label">Hasil Akhir</div>
+                    </div>
+                </div>
+                
+                <div class="filtered-combo" id="filteredCombo" onclick="copyFilteredCombo()" title="Klik untuk copy">
+                    <!-- Filtered results will appear here -->
+                </div>
+                
+                <div style="text-align:center;color:var(--text-muted);font-size:0.85em;">
+                    📋 Klik kotak hasil di atas untuk copy otomatis
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Combo Box (NEW - Auto Generate from Filtered 2D + 3D Prediction) -->
+        <div class="combo-3d-box" onclick="copyCombo3D()" title="Klik untuk copy semua angka">
+            <div class="combo-3d-title">
+                <i class="fas fa-cubes"></i>
+                🎲 Kombinasi 3D Otomatis - Filter 2D × Prediksi 3D
+            </div>
+            <div class="combo-3d-value" id="combo3d">
+                Hitung prediksi dan lakukan filter 2D terlebih dahulu untuk generate kombinasi 3D
+            </div>
+            <div class="combo-3d-info">
+                ⚡ Menggabungkan hasil filter 2D user dengan 3 angka prediksi 3D AI • Semua posisi (ABC, ACB, BAC, BCA, CAB, CBA) • Pemisah: * • Total: <span id="combo3dCount">0</span> kombinasi            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-box">
+           
